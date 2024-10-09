@@ -18,7 +18,7 @@ def speak_text(text):
 # Define chatbot roles
 roles = {
     "general": "You are a helpful assistant.",
-    "therapist": "You are a compassionate therapist who helps users with mental well-being."
+    "forecaster": "You are a weather forecaster."
 }
 
 conversation_history = []  # Store conversation history
@@ -70,16 +70,20 @@ def get_bot_response():
         root.quit()
         return
 
+    # Insert user input to conversation box
     conversation_box.insert(tk.END, f"You: {user_input}\n", "user")
     conversation_history.append(f"You: {user_input}\n")
 
-    # Handle general conversation
+    # Handle general conversation first
     general_response = handle_general_conversation(user_input)
-    
+
     if general_response:
+        # Display the general response first, then convert it to speech
         conversation_box.insert(tk.END, f"Bot: {general_response}\n", "bot")
-        speak_text(general_response)
         conversation_history.append(f"Bot: {general_response}\n")
+        entry.delete(0, tk.END)  # Clear the entry field
+        conversation_box.see(tk.END)  # Scroll down to the latest message
+        root.after(200, lambda: speak_text(general_response))  # Delay to allow the text to appear before speech
     else:
         # Prepare the conversation prompt based on the current role
         prompt = f"""
@@ -103,9 +107,13 @@ def get_bot_response():
                 response_format=ResponseFormat(type="text"),
             )
             assistant_response = response.choices[0].message.content
+            
+            # Display assistant response first, then convert it to speech
             conversation_box.insert(tk.END, f"Bot: {assistant_response}\n", "bot")
             conversation_history.append(f"Bot: {assistant_response}\n")
-            speak_text(assistant_response)
+            entry.delete(0, tk.END)
+            conversation_box.see(tk.END)  # Scroll to the latest message
+            root.after(200, lambda: speak_text(assistant_response))  # Delay for speech
         except Exception as e:
             conversation_box.insert(tk.END, "Bot: Sorry, there was an error in processing your request.\n", "bot")
 
@@ -113,8 +121,6 @@ def get_bot_response():
     suggestions = suggest_resources(user_input)
     if suggestions:
         conversation_box.insert(tk.END, f"Bot: {suggestions}\n", "bot")
-
-    entry.delete(0, tk.END)
 
 # Clear the conversation history
 def clear_conversation():
@@ -131,7 +137,7 @@ def save_conversation():
 
 # GUI improvements
 root = tk.Tk()
-root.title("AI21 Chatbot - Adaptive Assistant")
+root.title("AI21 Chatbot - Byte Club")
 root.geometry("700x600")  # Initial size
 root.resizable(True, True)  # Allow window resizing
 root.configure(bg="#1e1e2f")
